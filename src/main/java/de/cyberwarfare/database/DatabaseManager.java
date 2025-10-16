@@ -205,6 +205,7 @@ public class DatabaseManager {
                         y INTEGER NOT NULL,
                         z INTEGER NOT NULL,
                         security_level INTEGER DEFAULT 1,
+                        ip_address VARCHAR(15) UNIQUE,
                         created_by VARCHAR(36),
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
@@ -235,6 +236,8 @@ public class DatabaseManager {
                         difficulty INTEGER DEFAULT 1,
                         is_compromised BOOLEAN DEFAULT FALSE,
                         value INTEGER DEFAULT 100,
+                        ip_address VARCHAR(15) UNIQUE,
+                        owned_by_terminal INTEGER NULL,
                         created_by VARCHAR(36),
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         last_hacked DATETIME NULL
@@ -302,13 +305,13 @@ public class DatabaseManager {
             String sql = """
                 INSERT INTO hacker_players (player_uuid, successful_hacks, failed_hacks, 
                                           total_trace_score, skill_level, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?) 
-                ON DUPLICATE KEY UPDATE 
-                    successful_hacks = VALUES(successful_hacks),
-                    failed_hacks = VALUES(failed_hacks),
-                    total_trace_score = VALUES(total_trace_score),
-                    skill_level = VALUES(skill_level),
-                    updated_at = VALUES(updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(player_uuid) DO UPDATE SET
+                    successful_hacks = excluded.successful_hacks,
+                    failed_hacks = excluded.failed_hacks,
+                    total_trace_score = excluded.total_trace_score,
+                    skill_level = excluded.skill_level,
+                    updated_at = excluded.updated_at
                 """;
             
             try (Connection conn = dataSource.getConnection();

@@ -306,4 +306,17 @@ public class MobileTerminalManager {
         // TODO: Implement settings GUI
         player.sendMessage(Component.text("Mobile Terminal Einstellungen (coming soon)", NamedTextColor.YELLOW));
     }
+    
+    /**
+     * Gives a player a new mobile terminal
+     */
+    public CompletableFuture<Boolean> giveMobileTerminal(Player player) {
+        return createMobileTerminal(player, "Mobile Terminal", 1).thenApply(itemStack -> {
+            if (itemStack != null) {
+                // Add to player inventory
+                return player.getInventory().addItem(itemStack).isEmpty();
+            }
+            return false;
+        });
+    }
 }

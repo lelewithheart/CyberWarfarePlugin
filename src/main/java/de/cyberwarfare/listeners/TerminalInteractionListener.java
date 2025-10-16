@@ -44,6 +44,10 @@ public class TerminalInteractionListener implements Listener {
         Block block = event.getClickedBlock();
         if (block == null) return;
         
+        // Terminal handling is now done by GUIInteractionListener
+        // This old handler is disabled
+        
+        /*
         // Check if it's a terminal block
         if (block.getType() == Material.OBSERVER) { // Using OBSERVER as terminal block
             plugin.getTerminalManager().getTerminalAt(block.getLocation()).thenAccept(terminal -> {
@@ -53,6 +57,7 @@ public class TerminalInteractionListener implements Listener {
                 }
             });
         }
+        */
     }
     
     /**

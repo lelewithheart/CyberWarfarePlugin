@@ -58,6 +58,13 @@ public class CyberWarfareCommand implements CommandExecutor, TabCompleter {
             case "version":
                 return handleVersion(sender);
                 
+            case "mobile":
+                return handleMobile(sender, args);
+                
+            case "ipgrabber":
+            case "ip-grabber":
+                return handleIPGrabber(sender, args);
+                
             default:
                 sender.sendMessage(Component.text("Unbekannter Befehl. Nutze ", NamedTextColor.RED)
                     .append(Component.text("/cyber help", NamedTextColor.YELLOW))
@@ -90,6 +97,43 @@ public class CyberWarfareCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(Component.text("Hacker Commands:", NamedTextColor.GREEN));
             sender.sendMessage(Component.text("/cyber stats [player]", NamedTextColor.YELLOW)
                 .append(Component.text(" - Statistiken anzeigen", NamedTextColor.GRAY)));
+        }
+        
+        // Mobile Terminal Commands
+        if (sender.hasPermission("cyberwarfare.mobile")) {
+            sender.sendMessage(Component.empty());
+            sender.sendMessage(Component.text("Mobile Terminal:", NamedTextColor.AQUA));
+            sender.sendMessage(Component.text("/cyber mobile give", NamedTextColor.YELLOW)
+                .append(Component.text(" - Mobile Terminal erhalten", NamedTextColor.GRAY)));
+            sender.sendMessage(Component.text("/cyber mobile open", NamedTextColor.YELLOW)
+                .append(Component.text(" - Mobile Terminal GUI öffnen", NamedTextColor.GRAY)));
+        }
+        
+        // IP-Grabber Commands
+        if (sender.hasPermission("cyberwarfare.ipgrabber")) {
+            sender.sendMessage(Component.empty());
+            sender.sendMessage(Component.text("IP-Grabber:", NamedTextColor.GOLD));
+            sender.sendMessage(Component.text("/cyber ipgrabber give", NamedTextColor.YELLOW)
+                .append(Component.text(" - IP-Grabber Item erhalten", NamedTextColor.GRAY)));
+        }
+        
+        // Equipment Commands
+        if (sender.hasPermission("cyberwarfare.mobile")) {
+            sender.sendMessage(Component.empty());
+            sender.sendMessage(Component.text("Equipment Commands:", NamedTextColor.AQUA));
+            sender.sendMessage(Component.text("/cyber mobile give", NamedTextColor.YELLOW)
+                .append(Component.text(" - Mobile Terminal erhalten", NamedTextColor.GRAY)));
+            sender.sendMessage(Component.text("/cyber mobile open", NamedTextColor.YELLOW)
+                .append(Component.text(" - Mobile Terminal öffnen", NamedTextColor.GRAY)));
+        }
+        
+        if (sender.hasPermission("cyberwarfare.ipgrabber")) {
+            if (!sender.hasPermission("cyberwarfare.mobile")) {
+                sender.sendMessage(Component.empty());
+                sender.sendMessage(Component.text("Equipment Commands:", NamedTextColor.AQUA));
+            }
+            sender.sendMessage(Component.text("/cyber ipgrabber give", NamedTextColor.YELLOW)
+                .append(Component.text(" - IP-Grabber erhalten", NamedTextColor.GRAY)));
         }
         
         // Admin Commands
@@ -402,6 +446,14 @@ public class CyberWarfareCommand implements CommandExecutor, TabCompleter {
             if (sender.hasPermission("cyberwarfare.admin")) {
                 completions.addAll(Arrays.asList("reload", "terminal", "target"));
             }
+            
+            if (sender.hasPermission("cyberwarfare.mobile")) {
+                completions.add("mobile");
+            }
+            
+            if (sender.hasPermission("cyberwarfare.ipgrabber")) {
+                completions.addAll(Arrays.asList("ipgrabber", "ip-grabber"));
+            }
         } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
                 case "terminal":
@@ -412,6 +464,17 @@ public class CyberWarfareCommand implements CommandExecutor, TabCompleter {
                 case "target":
                     if (sender.hasPermission("cyberwarfare.admin")) {
                         completions.addAll(Arrays.asList("create", "remove"));
+                    }
+                    break;
+                case "mobile":
+                    if (sender.hasPermission("cyberwarfare.mobile")) {
+                        completions.addAll(Arrays.asList("give", "open"));
+                    }
+                    break;
+                case "ipgrabber":
+                case "ip-grabber":
+                    if (sender.hasPermission("cyberwarfare.ipgrabber")) {
+                        completions.add("give");
                     }
                     break;
                 case "stats":
@@ -434,5 +497,90 @@ public class CyberWarfareCommand implements CommandExecutor, TabCompleter {
         completions.removeIf(s -> !s.toLowerCase().startsWith(partial));
         
         return completions;
+    }
+    
+    /**
+     * Handles mobile terminal commands
+     */
+    private boolean handleMobile(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Dieser Befehl kann nur von Spielern ausgeführt werden!", NamedTextColor.RED));
+            return true;
+        }
+        
+        if (!sender.hasPermission("cyberwarfare.mobile")) {
+            sender.sendMessage(Component.text("Du hast keine Berechtigung für diesen Befehl!", NamedTextColor.RED));
+            return true;
+        }
+        
+        if (args.length < 2) {
+            player.sendMessage(Component.text("Verwendung: /cyber mobile <give|open>", NamedTextColor.YELLOW));
+            return true;
+        }
+        
+        switch (args[1].toLowerCase()) {
+            case "give":
+                plugin.getMobileTerminalManager().giveMobileTerminal(player).thenAccept(success -> {
+                    plugin.getServer().getScheduler().runTask(plugin, () -> {
+                        if (success) {
+                            player.sendMessage(Component.text("📱 Mobile Terminal erhalten!")
+                                .color(NamedTextColor.GREEN));
+                        } else {
+                            player.sendMessage(Component.text("❌ Fehler beim Erstellen des Mobile Terminals!")
+                                .color(NamedTextColor.RED));
+                        }
+                    });
+                });
+                break;
+                
+            case "open":
+                new de.cyberwarfare.gui.MobileTerminalGUI(plugin).openMobileTerminalGUI(player);
+                break;
+                
+            default:
+                player.sendMessage(Component.text("Verwendung: /cyber mobile <give|open>", NamedTextColor.YELLOW));
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Handles IP-Grabber commands  
+     */
+    private boolean handleIPGrabber(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Dieser Befehl kann nur von Spielern ausgeführt werden!", NamedTextColor.RED));
+            return true;
+        }
+        
+        if (!sender.hasPermission("cyberwarfare.ipgrabber")) {
+            sender.sendMessage(Component.text("Du hast keine Berechtigung für diesen Befehl!", NamedTextColor.RED));
+            return true;
+        }
+        
+        if (args.length < 2) {
+            player.sendMessage(Component.text("Verwendung: /cyber ipgrabber <give>", NamedTextColor.YELLOW));
+            return true;
+        }
+        
+        switch (args[1].toLowerCase()) {
+            case "give":
+                de.cyberwarfare.items.IPGrabber ipGrabber = new de.cyberwarfare.items.IPGrabber(plugin);
+                var item = ipGrabber.createIPGrabber();
+                
+                if (player.getInventory().addItem(item).isEmpty()) {
+                    player.sendMessage(Component.text("📡 IP-Grabber erhalten!")
+                        .color(NamedTextColor.GREEN));
+                } else {
+                    player.sendMessage(Component.text("❌ Inventar voll!")
+                        .color(NamedTextColor.RED));
+                }
+                break;
+                
+            default:
+                player.sendMessage(Component.text("Verwendung: /cyber ipgrabber <give>", NamedTextColor.YELLOW));
+        }
+        
+        return true;
     }
 }

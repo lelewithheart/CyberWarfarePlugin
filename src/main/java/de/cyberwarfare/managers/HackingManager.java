@@ -10,9 +10,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -51,6 +49,29 @@ public class HackingManager {
             // Open target selection GUI
             new HackingGUI(plugin, session).openTargetSelection();
         });
+    }
+    
+    /**
+     * Starts a direct hacking session with a specific target (mobile)
+     */
+    public void startMobileHackingSession(Player player, HackTarget target) {
+        if (hasActiveSession(player)) {
+            player.sendMessage(Component.text("Du hackst bereits etwas anderes!", NamedTextColor.RED));
+            return;
+        }
+        
+        // Create direct hacking session with one target using a dummy mobile terminal
+        List<HackTarget> targets = new ArrayList<>();
+        targets.add(target);
+        
+        // Create temporary mobile terminal for this session
+        MobileTerminal dummyMobile = new MobileTerminal(0, player.getUniqueId(), "Mobile Scanner", 1, 100, true, null);
+        
+        HackingSession session = new HackingSession(player, dummyMobile, targets);
+        activeSessions.put(player.getUniqueId(), session);
+        
+        // Start minigame directly
+        startMinigame(player, target);
     }
     
     /**

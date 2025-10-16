@@ -220,4 +220,57 @@ public class TerminalManager {
         Terminal terminal = getTerminalAt(block.getLocation()).join();
         return terminal != null;
     }
+    
+    /**
+     * Gets all terminals in radius around a location
+     */
+    public List<Terminal> getTerminalsInRadius(Location center, double radius) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<Terminal> terminals = new ArrayList<>();
+            
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String sql = "SELECT * FROM terminals WHERE world_name = ?";
+                
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setString(1, center.getWorld().getName());
+                    
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            Terminal terminal = createTerminalFromResultSet(rs);
+                            
+                            // Check distance
+                            if (terminal.getLocation().distance(center) <= radius) {
+                                terminals.add(terminal);
+                            }
+                        }
+                    }
+                }
+                
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error getting terminals in radius: " + e.getMessage());
+            }
+            
+            return terminals;
+        }).join();
+    }
+    
+    /**
+     * Helper method to create Terminal from ResultSet
+     */
+    private Terminal createTerminalFromResultSet(ResultSet rs) throws SQLException {
+        Location location = new Location(
+            plugin.getServer().getWorld(rs.getString("world_name")),
+            rs.getInt("x"),
+            rs.getInt("y"),
+            rs.getInt("z")
+        );
+        
+        return new Terminal(
+            rs.getInt("id"),
+            location,
+            rs.getInt("security_level"),
+            rs.getString("created_by"),
+            rs.getTimestamp("created_at")
+        );
+    }
 }

@@ -106,6 +106,7 @@ public class CyberWarfarePlugin extends JavaPlugin {
         getLogger().info("Registering event listeners...");
         
         getServer().getPluginManager().registerEvents(new TerminalInteractionListener(this), this);
+        getServer().getPluginManager().registerEvents(new de.cyberwarfare.listeners.GUIInteractionListener(this), this);
     }
     
     // Static access

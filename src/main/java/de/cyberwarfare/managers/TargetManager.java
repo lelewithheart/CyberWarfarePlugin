@@ -263,4 +263,150 @@ public class TargetManager {
         HackTarget target = getTargetAt(location).join();
         return target != null;
     }
+    
+    /**
+     * Gets all targets in radius around a location
+     */
+    public List<HackTarget> getTargetsInRadius(Location center, double radius) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<HackTarget> targets = new ArrayList<>();
+            
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String sql = "SELECT * FROM hack_targets WHERE world_name = ?";
+                
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setString(1, center.getWorld().getName());
+                    
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            HackTarget target = createTargetFromResultSet(rs);
+                            
+                            // Check distance
+                            if (target.getLocation().distance(center) <= radius) {
+                                targets.add(target);
+                            }
+                        }
+                    }
+                }
+                
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error getting targets in radius: " + e.getMessage());
+            }
+            
+            return targets;
+        }).join();
+    }
+    
+    /**
+     * Gets only hackable (not compromised) targets in radius
+     */
+    public List<HackTarget> getHackableTargetsInRadius(Location center, double radius) {
+        return getTargetsInRadius(center, radius).stream()
+            .filter(target -> !target.isCompromised())
+            .toList();
+    }
+    
+    /**
+     * Gets a target by ID
+     */
+    public CompletableFuture<java.util.Optional<HackTarget>> getTargetById(int id) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String sql = "SELECT * FROM hack_targets WHERE id = ?";
+                
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setInt(1, id);
+                    
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            return java.util.Optional.of(createTargetFromResultSet(rs));
+                        }
+                    }
+                }
+                
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error getting target by ID: " + e.getMessage());
+            }
+            
+            return java.util.Optional.empty();
+        });
+    }
+    
+    /**
+     * Gets all targets owned by a specific terminal
+     */
+    public List<HackTarget> getTargetsOwnedByTerminal(int terminalId) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<HackTarget> targets = new ArrayList<>();
+            
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String sql = "SELECT * FROM hack_targets WHERE owned_by_terminal = ?";
+                
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setInt(1, terminalId);
+                    
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            targets.add(createTargetFromResultSet(rs));
+                        }
+                    }
+                }
+                
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error getting targets owned by terminal: " + e.getMessage());
+            }
+            
+            return targets;
+        }).join();
+    }
+    
+    /**
+     * Finds a target by IP address
+     */
+    public CompletableFuture<java.util.Optional<HackTarget>> findTargetByIP(String ipAddress) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String sql = "SELECT * FROM hack_targets WHERE ip_address = ?";
+                
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setString(1, ipAddress);
+                    
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            return java.util.Optional.of(createTargetFromResultSet(rs));
+                        }
+                    }
+                }
+                
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Error finding target by IP: " + e.getMessage());
+            }
+            
+            return java.util.Optional.empty();
+        });
+    }
+    
+    /**
+     * Helper method to create HackTarget from ResultSet
+     */
+    private HackTarget createTargetFromResultSet(ResultSet rs) throws SQLException {
+        Location location = new Location(
+            plugin.getServer().getWorld(rs.getString("world_name")),
+            rs.getInt("x"),
+            rs.getInt("y"),
+            rs.getInt("z")
+        );
+        
+        return new HackTarget(
+            rs.getInt("id"),
+            location,
+            TargetType.valueOf(rs.getString("target_type")),
+            rs.getInt("difficulty"),
+            rs.getBoolean("is_compromised"),
+            rs.getInt("value"),
+            rs.getString("created_by"),
+            rs.getTimestamp("created_at"),
+            rs.getTimestamp("last_hacked")
+        );
+    }
 }
