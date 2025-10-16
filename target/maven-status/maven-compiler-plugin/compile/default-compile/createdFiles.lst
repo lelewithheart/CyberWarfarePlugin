@@ -1,0 +1,10 @@
+de\cyberwarfare\listeners\PlayerListener.class
+de\cyberwarfare\minigames\MinigameManager.class
+de\cyberwarfare\config\ConfigManager.class
+de\cyberwarfare\database\DatabaseManager.class
+de\cyberwarfare\terminals\TerminalManager.class
+de\cyberwarfare\listeners\TerminalListener.class
+de\cyberwarfare\models\HackerPlayer.class
+de\cyberwarfare\CyberWarfarePlugin.class
+de\cyberwarfare\commands\CyberWarfareCommand.class
+de\cyberwarfare\targets\TargetManager.class

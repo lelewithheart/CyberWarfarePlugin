@@ -1,0 +1,62 @@
+# CyberWarfare Plugin Messages
+# Use MiniMessage format: https://docs.advntr.dev/minimessage/format.html
+
+# General Messages
+plugin:
+  enabled: "<green>CyberWarfare plugin enabled successfully!</green>"
+  disabled: "<red>CyberWarfare plugin disabled.</red>"
+  reloaded: "<yellow>Configuration reloaded!</yellow>"
+
+# Permission Messages
+no-permission: "<red>Keine Berechtigung für diesen Befehl!</red>"
+player-only: "<red>Dieser Befehl kann nur von Spielern verwendet werden!</red>"
+
+# Command Messages
+commands:
+  help:
+    header: "<dark_aqua>═══════════════════════════════════════</dark_aqua>"
+    title: "<aqua><bold>CyberWarfare Commands</bold></aqua>"
+    usage: "<yellow>Verwendung: {usage}</yellow>"
+  reload:
+    success: "<green>Konfiguration erfolgreich neu geladen!</green>"
+    error: "<red>Fehler beim Neuladen der Konfiguration!</red>"
+  stats:
+    not-found: "<red>Spieler nicht gefunden!</red>"
+    loading: "<yellow>Lade Spieler-Statistiken...</yellow>"
+
+# Terminal Messages
+terminal:
+  created: "<green>Hacking terminal created successfully!</green>"
+  removed: "<red>Hacking terminal removed.</red>"
+  not-found: "<red>No terminal found at this location.</red>"
+  cooldown: "<yellow>This terminal is on cooldown. Wait <cooldown> seconds.</yellow>"
+  in-use: "<red>This terminal is currently being used by another player.</red>"
+  access-granted: "<green>Access granted! Initiating hack sequence...</green>"
+  access-denied: "<red>Access denied! Security level too high.</red>"
+
+# Minigame Messages
+minigame:
+  started: "<yellow>Hacking minigame started! Complete it within <time> seconds.</yellow>"
+  completed: "<green>Hack successful! You've gained access to the system.</green>"
+  failed: "<red>Hack failed! The system detected your intrusion.</red>"
+  timeout: "<red>Hack timed out! The connection was severed.</red>"
+
+# Target Messages
+target:
+  created: "<green>Hack target created: <target-name></green>"
+  removed: "<red>Hack target removed: <target-name></red>"
+  hacked: "<green>Successfully hacked <target-name>!</green>"
+  failed: "<red>Hack attempt on <target-name> failed!</red>"
+
+# Player Messages
+player:
+  level-up: "<gold>Level up! You are now level <level> (<rank>)!</gold>"
+  stats: "<yellow>Stats: Level <level> | Successful: <successful> | Failed: <failed> | Success Rate: <rate>%</yellow>"
+  trace-warning: "<red>Warning: Your trace level is high! Lay low for a while.</red>"
+
+# Error Messages
+error:
+  general: "<red>An error occurred. Please contact an administrator.</red>"
+  database: "<red>Database error. Changes may not be saved.</red>"
+  invalid-target: "<red>Invalid target specified.</red>"
+  command-usage: "<yellow>Usage: <usage></yellow>"

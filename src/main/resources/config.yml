@@ -1,0 +1,35 @@
+# Database Configuration
+database:
+  enabled: true
+  type: sqlite  # sqlite or mysql
+  host: localhost
+  port: 3306
+  database: cyberwarfare
+  username: root
+  password: ""
+
+# Terminal Configuration
+terminals:
+  cooldown: 30  # seconds between uses
+  max-per-chunk: 3  # maximum terminals per chunk
+  security-levels: [1, 2, 3, 4, 5]
+
+# Minigame Configuration
+minigames:
+  timeout: 60  # seconds to complete
+  difficulty: 5  # base difficulty level
+  types:
+    - PASSWORD_CRACK
+    - MEMORY_MATRIX
+    - SEQUENCE_MATCH
+
+# Target Configuration
+targets:
+  cooldown: 300  # 5 minutes between hack attempts
+  base-success-rate: 0.6  # 60% base success rate
+  trace-increase: 10  # trace points added per hack
+
+# General Settings
+general:
+  debug: false
+  auto-save-interval: 300  # 5 minutes

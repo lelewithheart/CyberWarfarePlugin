@@ -1,0 +1,71 @@
+name: CyberWarfare
+version: 1.0.0-SNAPSHOT
+main: de.cyberwarfare.CyberWarfarePlugin
+api-version: 1.21
+author: CyberWarfare Team
+description: Advanced hacking system with terminals, minigames, and database integration
+website: https://github.com/cyberwarfare/plugin
+
+depend: []
+softdepend: [PlaceholderAPI, LuckPerms]
+
+commands:
+  cyberwarfare:
+    description: Main CyberWarfare command
+    aliases: [cw, hack, cyber]
+    usage: /<command> [help|stats|reload|terminal|target|info|version]
+    permission: cyberwarfare.command
+
+permissions:
+  cyberwarfare.*:
+    description: All CyberWarfare permissions
+    default: op
+    children:
+      cyberwarfare.command: true
+      cyberwarfare.admin: true
+      cyberwarfare.hack: true
+      
+  cyberwarfare.command:
+    description: Access to basic commands
+    default: true
+    
+  cyberwarfare.admin:
+    description: Admin access to all features
+    default: op
+    children:
+      cyberwarfare.command: true
+      cyberwarfare.terminal.create: true
+      cyberwarfare.terminal.remove: true
+      cyberwarfare.target.create: true
+      cyberwarfare.target.remove: true
+      
+  cyberwarfare.hack:
+    description: Access to hacking features
+    default: true
+    children:
+      cyberwarfare.terminal.use: true
+      cyberwarfare.minigames.play: true
+      
+  cyberwarfare.terminal.create:
+    description: Create hacking terminals
+    default: op
+    
+  cyberwarfare.terminal.remove:
+    description: Remove hacking terminals
+    default: op
+    
+  cyberwarfare.terminal.use:
+    description: Use hacking terminals
+    default: true
+    
+  cyberwarfare.target.create:
+    description: Create hack targets
+    default: op
+    
+  cyberwarfare.target.remove:
+    description: Remove hack targets
+    default: op
+    
+  cyberwarfare.minigames.play:
+    description: Play hacking minigames
+    default: true
