@@ -2,15 +2,13 @@ package de.cyberwarfare;
 
 import de.cyberwarfare.config.ConfigManager;
 import de.cyberwarfare.database.DatabaseManager;
-import de.cyberwarfare.terminals.TerminalManager;
-import de.cyberwarfare.minigames.MinigameManager;
-import de.cyberwarfare.targets.TargetManager;
+import de.cyberwarfare.managers.TerminalManager;
+import de.cyberwarfare.managers.TargetManager;
+import de.cyberwarfare.managers.MobileTerminalManager;
+import de.cyberwarfare.managers.HackingManager;
 import de.cyberwarfare.commands.CyberWarfareCommand;
-import de.cyberwarfare.listeners.PlayerListener;
-import de.cyberwarfare.listeners.TerminalListener;
+import de.cyberwarfare.listeners.TerminalInteractionListener;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Main plugin class for CyberWarfare
@@ -19,20 +17,20 @@ import org.slf4j.LoggerFactory;
 public class CyberWarfarePlugin extends JavaPlugin {
     
     private static CyberWarfarePlugin instance;
-    private static final Logger logger = LoggerFactory.getLogger(CyberWarfarePlugin.class);
     
     // Core managers
     private ConfigManager configManager;
     private DatabaseManager databaseManager;
     private TerminalManager terminalManager;
-    private MinigameManager minigameManager;
     private TargetManager targetManager;
+    private MobileTerminalManager mobileTerminalManager;
+    private HackingManager hackingManager;
     
     @Override
     public void onEnable() {
         instance = this;
         
-        logger.info("Starting CyberWarfare Plugin v{}", getDescription().getVersion());
+        getLogger().info("Starting CyberWarfare Plugin v" + getPluginMeta().getVersion());
         
         try {
             // Initialize core systems in order
@@ -40,71 +38,74 @@ public class CyberWarfarePlugin extends JavaPlugin {
             registerCommands();
             registerListeners();
             
-            logger.info("CyberWarfare Plugin enabled successfully!");
+            getLogger().info("CyberWarfare Plugin enabled successfully!");
             
         } catch (Exception e) {
-            logger.error("Failed to enable CyberWarfare Plugin", e);
+            getLogger().severe("Failed to enable CyberWarfare Plugin: " + e.getMessage());
+            e.printStackTrace();
             getServer().getPluginManager().disablePlugin(this);
         }
     }
     
     @Override
     public void onDisable() {
-        logger.info("Shutting down CyberWarfare Plugin...");
+        getLogger().info("Shutting down CyberWarfare Plugin...");
         
         try {
-            // Shutdown systems in reverse order
-            if (minigameManager != null) {
-                minigameManager.shutdown();
-            }
-            
-            if (terminalManager != null) {
-                terminalManager.shutdown();
-            }
-            
+            // Shutdown database connection
             if (databaseManager != null) {
                 databaseManager.shutdown();
             }
             
-            logger.info("CyberWarfare Plugin disabled successfully!");
+            getLogger().info("CyberWarfare Plugin disabled successfully!");
             
         } catch (Exception e) {
-            logger.error("Error during plugin shutdown", e);
+            getLogger().severe("Error during plugin shutdown: " + e.getMessage());
+            e.printStackTrace();
         }
         
         instance = null;
     }
     
-    private void initializeManagers() {
-        logger.info("Initializing core managers...");
+    /**
+     * Initializes all manager classes
+     */
+    private void initializeManagers() throws Exception {
+        getLogger().info("Initializing managers...");
         
-        // Configuration first
+        // Core configuration first
         this.configManager = new ConfigManager(this);
         
-        // Database second
+        // Database connection
         this.databaseManager = new DatabaseManager(this);
         
-        // Game systems third
+        // Game systems
         this.terminalManager = new TerminalManager(this);
-        this.minigameManager = new MinigameManager(this);
         this.targetManager = new TargetManager(this);
+        this.mobileTerminalManager = new MobileTerminalManager(this);
+        this.hackingManager = new HackingManager(this);
         
-        logger.info("All managers initialized successfully");
+        getLogger().info("All managers initialized successfully");
     }
     
+    /**
+     * Registers command handlers
+     */
     private void registerCommands() {
-        logger.debug("Registering commands...");
+        getLogger().info("Registering commands...");
         
         CyberWarfareCommand commandHandler = new CyberWarfareCommand(this);
-        getCommand("cyberwarfare").setExecutor(commandHandler);
-        getCommand("cyberwarfare").setTabCompleter(commandHandler);
+        getCommand("cyber").setExecutor(commandHandler);
+        getCommand("cyber").setTabCompleter(commandHandler);
     }
     
+    /**
+     * Registers event listeners
+     */
     private void registerListeners() {
-        logger.debug("Registering event listeners...");
+        getLogger().info("Registering event listeners...");
         
-        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
-        getServer().getPluginManager().registerEvents(new TerminalListener(this), this);
+        getServer().getPluginManager().registerEvents(new TerminalInteractionListener(this), this);
     }
     
     // Static access
@@ -125,11 +126,15 @@ public class CyberWarfarePlugin extends JavaPlugin {
         return terminalManager;
     }
     
-    public MinigameManager getMinigameManager() {
-        return minigameManager;
-    }
-    
     public TargetManager getTargetManager() {
         return targetManager;
+    }
+    
+    public MobileTerminalManager getMobileTerminalManager() {
+        return mobileTerminalManager;
+    }
+    
+    public HackingManager getHackingManager() {
+        return hackingManager;
     }
 }

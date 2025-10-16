@@ -42,7 +42,7 @@ public class TerminalManager {
                 
                 // Place terminal block
                 Block block = location.getBlock();
-                block.setType(Material.COMPUTER);
+                block.setType(Material.OBSERVER);
                 
                 // Save to database
                 String sql = """
@@ -205,7 +205,7 @@ public class TerminalManager {
      * Checks if a block is a terminal
      */
     public boolean isTerminalBlock(Block block) {
-        if (block.getType() != Material.COMPUTER) {
+        if (block.getType() != Material.OBSERVER) {
             return false;
         }
         

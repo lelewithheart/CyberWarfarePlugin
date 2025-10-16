@@ -198,11 +198,13 @@ public class HackingManager {
         for (int i = 0; i < player.getInventory().getSize(); i++) {
             org.bukkit.inventory.ItemStack item = player.getInventory().getItem(i);
             if (plugin.getMobileTerminalManager().isMobileTerminal(item)) {
+                final int finalSlot = i;
+                final org.bukkit.inventory.ItemStack finalItem = item;
                 plugin.getMobileTerminalManager().getMobileTerminalFromItem(item).thenAccept(itemTerminal -> {
                     if (itemTerminal != null && itemTerminal.getId() == terminal.getId()) {
                         org.bukkit.inventory.ItemStack updatedItem = plugin.getMobileTerminalManager()
-                            .updateItemBattery(item, terminal.getBatteryLevel());
-                        player.getInventory().setItem(i, updatedItem);
+                            .updateItemBattery(finalItem, terminal.getBatteryLevel());
+                        player.getInventory().setItem(finalSlot, updatedItem);
                     }
                 });
                 break;

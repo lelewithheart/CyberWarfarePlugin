@@ -217,15 +217,67 @@ public class CyberWarfareCommand implements CommandExecutor, TabCompleter {
         
         switch (args[1].toLowerCase()) {
             case "create":
-                // TODO: Terminal Manager implementieren
-                sender.sendMessage(Component.text("Terminal-Erstellung noch nicht implementiert!", NamedTextColor.YELLOW));
+                int securityLevel = 1;
+                if (args.length > 2) {
+                    try {
+                        securityLevel = Integer.parseInt(args[2]);
+                        securityLevel = Math.max(1, Math.min(10, securityLevel));
+                    } catch (NumberFormatException e) {
+                        sender.sendMessage(Component.text("Ungültiger Security Level! Verwende 1-10", NamedTextColor.RED));
+                        return true;
+                    }
+                }
+                
+                final int finalSecurityLevel = securityLevel;
+                plugin.getTerminalManager().createTerminal(player.getLocation(), player, finalSecurityLevel)
+                    .thenAccept(success -> {
+                        if (success) {
+                            sender.sendMessage(Component.text("✅ Terminal erfolgreich erstellt! (Security Level: " + finalSecurityLevel + ")", NamedTextColor.GREEN));
+                        } else {
+                            sender.sendMessage(Component.text("❌ Terminal konnte nicht erstellt werden! (Bereits vorhanden?)", NamedTextColor.RED));
+                        }
+                    });
                 break;
+                
             case "remove":
-                // TODO: Terminal Manager implementieren
-                sender.sendMessage(Component.text("Terminal-Entfernung noch nicht implementiert!", NamedTextColor.YELLOW));
+                plugin.getTerminalManager().removeTerminal(player.getLocation())
+                    .thenAccept(success -> {
+                        if (success) {
+                            sender.sendMessage(Component.text("✅ Terminal erfolgreich entfernt!", NamedTextColor.GREEN));
+                        } else {
+                            sender.sendMessage(Component.text("❌ Kein Terminal an dieser Position gefunden!", NamedTextColor.RED));
+                        }
+                    });
                 break;
+                
+            case "give":
+                // Give mobile terminal
+                if (args.length < 3) {
+                    sender.sendMessage(Component.text("Verwendung: /cyber terminal give <securityLevel>", NamedTextColor.YELLOW));
+                    return true;
+                }
+                
+                try {
+                    int mobileSecurityLevel = Integer.parseInt(args[2]);
+                    mobileSecurityLevel = Math.max(1, Math.min(10, mobileSecurityLevel));
+                    
+                    final int finalMobileLevel = mobileSecurityLevel;
+                    plugin.getMobileTerminalManager().createMobileTerminal(player, "Mobile Terminal", finalMobileLevel)
+                        .thenAccept(mobileItem -> {
+                            if (mobileItem != null) {
+                                player.getInventory().addItem(mobileItem);
+                                sender.sendMessage(Component.text("✅ Mobile Terminal erhalten! (Security Level: " + finalMobileLevel + ")", NamedTextColor.GREEN));
+                            } else {
+                                sender.sendMessage(Component.text("❌ Mobile Terminal konnte nicht erstellt werden!", NamedTextColor.RED));
+                            }
+                        });
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(Component.text("Ungültiger Security Level! Verwende 1-10", NamedTextColor.RED));
+                }
+                break;
+                
             default:
-                sender.sendMessage(Component.text("Verwendung: /cyber terminal <create|remove>", NamedTextColor.YELLOW));
+                sender.sendMessage(Component.text("Verwendung: /cyber terminal <create|remove|give> [args]", NamedTextColor.YELLOW));
         }
         
         return true;
@@ -250,18 +302,52 @@ public class CyberWarfareCommand implements CommandExecutor, TabCompleter {
         switch (args[1].toLowerCase()) {
             case "create":
                 if (args.length < 3) {
-                    sender.sendMessage(Component.text("Verfügbare Typen: SERVER, CAMERA, ALARM, DOOR", NamedTextColor.YELLOW));
+                    sender.sendMessage(Component.text("Verfügbare Typen: SERVER, CAMERA, ALARM, DOOR, ATM, DATABASE", NamedTextColor.YELLOW));
                     return true;
                 }
-                // TODO: Target Manager implementieren
-                sender.sendMessage(Component.text("Ziel-Erstellung noch nicht implementiert!", NamedTextColor.YELLOW));
+                
+                try {
+                    de.cyberwarfare.managers.TargetManager.TargetType targetType = 
+                        de.cyberwarfare.managers.TargetManager.TargetType.valueOf(args[2].toUpperCase());
+                    
+                    int difficulty = 1;
+                    if (args.length > 3) {
+                        try {
+                            difficulty = Integer.parseInt(args[3]);
+                            difficulty = Math.max(1, Math.min(10, difficulty));
+                        } catch (NumberFormatException e) {
+                            // Use default difficulty
+                        }
+                    }
+                    
+                    final int finalDifficulty = difficulty;
+                    plugin.getTargetManager().createTarget(player.getLocation(), targetType, player, finalDifficulty)
+                        .thenAccept(success -> {
+                            if (success) {
+                                sender.sendMessage(Component.text("✅ " + targetType.getDisplayName() + " erfolgreich erstellt! (Schwierigkeit: " + finalDifficulty + ")", NamedTextColor.GREEN));
+                            } else {
+                                sender.sendMessage(Component.text("❌ Ziel konnte nicht erstellt werden! (Bereits vorhanden?)", NamedTextColor.RED));
+                            }
+                        });
+                        
+                } catch (IllegalArgumentException e) {
+                    sender.sendMessage(Component.text("❌ Unbekannter Zieltyp! Verfügbare Typen: SERVER, CAMERA, ALARM, DOOR, ATM, DATABASE", NamedTextColor.RED));
+                }
                 break;
+                
             case "remove":
-                // TODO: Target Manager implementieren  
-                sender.sendMessage(Component.text("Ziel-Entfernung noch nicht implementiert!", NamedTextColor.YELLOW));
+                plugin.getTargetManager().removeTarget(player.getLocation())
+                    .thenAccept(success -> {
+                        if (success) {
+                            sender.sendMessage(Component.text("✅ Ziel erfolgreich entfernt!", NamedTextColor.GREEN));
+                        } else {
+                            sender.sendMessage(Component.text("❌ Kein Ziel an dieser Position gefunden!", NamedTextColor.RED));
+                        }
+                    });
                 break;
+                
             default:
-                sender.sendMessage(Component.text("Verwendung: /cyber target <create|remove> [type]", NamedTextColor.YELLOW));
+                sender.sendMessage(Component.text("Verwendung: /cyber target <create|remove> [type] [difficulty]", NamedTextColor.YELLOW));
         }
         
         return true;
@@ -320,7 +406,7 @@ public class CyberWarfareCommand implements CommandExecutor, TabCompleter {
             switch (args[0].toLowerCase()) {
                 case "terminal":
                     if (sender.hasPermission("cyberwarfare.admin")) {
-                        completions.addAll(Arrays.asList("create", "remove"));
+                        completions.addAll(Arrays.asList("create", "remove", "give"));
                     }
                     break;
                 case "target":

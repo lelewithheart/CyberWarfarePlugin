@@ -67,7 +67,7 @@ public class HackingGUI implements Listener {
      * Creates header item showing terminal info
      */
     private ItemStack createHeaderItem() {
-        ItemStack item = new ItemStack(session.isMobileSession() ? Material.RECOVERY_COMPASS : Material.COMPUTER);
+        ItemStack item = new ItemStack(session.isMobileSession() ? Material.RECOVERY_COMPASS : Material.OBSERVER);
         ItemMeta meta = item.getItemMeta();
         
         Component name = Component.text("Hacking Terminal", NamedTextColor.AQUA, TextDecoration.BOLD);
