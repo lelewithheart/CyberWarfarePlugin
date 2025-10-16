@@ -132,7 +132,7 @@ public class DatabaseManager {
                 )
             """);
             
-            // Create mobile terminals table
+            // Create mobile terminals table (without foreign key for now)
             conn.createStatement().executeUpdate("""
                 CREATE TABLE IF NOT EXISTS mobile_terminals (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -141,10 +141,14 @@ public class DatabaseManager {
                     security_level INTEGER DEFAULT 1,
                     battery_level INTEGER DEFAULT 100,
                     is_active BOOLEAN DEFAULT TRUE,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (owner_uuid) REFERENCES hacker_players(player_uuid)
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """);
+            
+            // Migration: Fix existing tables with wrong column names
+            migrateOldTables(conn);
+            
+            plugin.getLogger().info("Database schema initialized successfully");
 
             // Create hack sessions table
             conn.createStatement().executeUpdate("""
@@ -172,11 +176,93 @@ public class DatabaseManager {
                 )
             """);
             
-            plugin.getLogger().info("Database schema initialized successfully");
-            
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to initialize database schema: " + e.getMessage());
             throw new RuntimeException("Database initialization failed", e);
+        }
+    }
+    
+    /**
+     * Migrates old tables to new schema
+     */
+    private void migrateOldTables(Connection conn) throws SQLException {
+        plugin.getLogger().info("Checking for database migrations...");
+        
+        // Check if old terminals table exists with wrong column names
+        try {
+            conn.createStatement().executeQuery("SELECT world_name FROM terminals LIMIT 1");
+            plugin.getLogger().info("Terminals table schema is correct");
+        } catch (SQLException e) {
+            plugin.getLogger().info("Migrating terminals table...");
+            // Drop and recreate terminals table
+            try {
+                conn.createStatement().executeUpdate("DROP TABLE IF EXISTS terminals");
+                conn.createStatement().executeUpdate("""
+                    CREATE TABLE terminals (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        world_name VARCHAR(50) NOT NULL,
+                        x INTEGER NOT NULL,
+                        y INTEGER NOT NULL,
+                        z INTEGER NOT NULL,
+                        security_level INTEGER DEFAULT 1,
+                        created_by VARCHAR(36),
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                """);
+                plugin.getLogger().info("Terminals table migrated successfully");
+            } catch (SQLException ex) {
+                plugin.getLogger().warning("Failed to migrate terminals table: " + ex.getMessage());
+            }
+        }
+        
+        // Check if old hack_targets table exists with wrong column names  
+        try {
+            conn.createStatement().executeQuery("SELECT world_name, value, is_compromised FROM hack_targets LIMIT 1");
+            plugin.getLogger().info("Hack_targets table schema is correct");
+        } catch (SQLException e) {
+            plugin.getLogger().info("Migrating hack_targets table...");
+            // Drop and recreate hack_targets table
+            try {
+                conn.createStatement().executeUpdate("DROP TABLE IF EXISTS hack_targets");
+                conn.createStatement().executeUpdate("""
+                    CREATE TABLE hack_targets (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        world_name VARCHAR(50) NOT NULL,
+                        x INTEGER NOT NULL,
+                        y INTEGER NOT NULL,
+                        z INTEGER NOT NULL,
+                        target_type VARCHAR(20) NOT NULL,
+                        difficulty INTEGER DEFAULT 1,
+                        is_compromised BOOLEAN DEFAULT FALSE,
+                        value INTEGER DEFAULT 100,
+                        created_by VARCHAR(36),
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        last_hacked DATETIME NULL
+                    )
+                """);
+                plugin.getLogger().info("Hack_targets table migrated successfully");
+            } catch (SQLException ex) {
+                plugin.getLogger().warning("Failed to migrate hack_targets table: " + ex.getMessage());
+            }
+        }
+        
+        // Check if mobile_terminals table has foreign key issues
+        try {
+            conn.createStatement().executeUpdate("DROP TABLE IF EXISTS mobile_terminals");
+            conn.createStatement().executeUpdate("""
+                CREATE TABLE mobile_terminals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    owner_uuid VARCHAR(36) NOT NULL,
+                    terminal_name VARCHAR(50) DEFAULT 'Mobile Terminal',
+                    security_level INTEGER DEFAULT 1,
+                    battery_level INTEGER DEFAULT 100,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """);
+            plugin.getLogger().info("Mobile_terminals table recreated without foreign keys");
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Failed to recreate mobile_terminals table: " + ex.getMessage());
         }
     }
     

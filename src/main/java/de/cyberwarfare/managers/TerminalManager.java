@@ -40,11 +40,7 @@ public class TerminalManager {
                     return false;
                 }
                 
-                // Place terminal block
-                Block block = location.getBlock();
-                block.setType(Material.OBSERVER);
-                
-                // Save to database
+                // Save to database first
                 String sql = """
                     INSERT INTO terminals (world_name, x, y, z, security_level, created_by)
                     VALUES (?, ?, ?, ?, ?, ?)
@@ -58,7 +54,17 @@ public class TerminalManager {
                     stmt.setInt(5, securityLevel);
                     stmt.setString(6, creator.getUniqueId().toString());
                     
-                    return stmt.executeUpdate() > 0;
+                    boolean success = stmt.executeUpdate() > 0;
+                    
+                    if (success) {
+                        // Place block on main thread
+                        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                            Block block = location.getBlock();
+                            block.setType(Material.OBSERVER);
+                        });
+                    }
+                    
+                    return success;
                 }
                 
             } catch (SQLException e) {
@@ -89,8 +95,10 @@ public class TerminalManager {
                     boolean removed = stmt.executeUpdate() > 0;
                     
                     if (removed) {
-                        // Remove the block
-                        location.getBlock().setType(Material.AIR);
+                        // Remove the block on main thread
+                        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                            location.getBlock().setType(Material.AIR);
+                        });
                     }
                     
                     return removed;

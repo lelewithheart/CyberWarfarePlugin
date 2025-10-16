@@ -63,13 +63,10 @@ public class TargetManager {
                     return false;
                 }
                 
-                // Place target block
-                location.getBlock().setType(type.getMaterial());
-                
                 // Calculate value based on difficulty
                 int value = type.getBaseValue() * difficulty;
                 
-                // Save to database
+                // Save to database first
                 String sql = """
                     INSERT INTO hack_targets (world_name, x, y, z, target_type, difficulty, value, created_by)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -85,7 +82,16 @@ public class TargetManager {
                     stmt.setInt(7, value);
                     stmt.setString(8, creator.getUniqueId().toString());
                     
-                    return stmt.executeUpdate() > 0;
+                    boolean success = stmt.executeUpdate() > 0;
+                    
+                    if (success) {
+                        // Place block on main thread
+                        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                            location.getBlock().setType(type.getMaterial());
+                        });
+                    }
+                    
+                    return success;
                 }
                 
             } catch (SQLException e) {
@@ -116,8 +122,10 @@ public class TargetManager {
                     boolean removed = stmt.executeUpdate() > 0;
                     
                     if (removed) {
-                        // Remove the block
-                        location.getBlock().setType(Material.AIR);
+                        // Remove the block on main thread
+                        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                            location.getBlock().setType(Material.AIR);
+                        });
                     }
                     
                     return removed;
